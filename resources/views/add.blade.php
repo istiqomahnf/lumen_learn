@@ -63,7 +63,6 @@
 
             <div class="col-sm-8">
                 <button type="button" class="btn btn-primary float-right" id="btn_add">Save</button>
-                <!-- <button type="submit" class="btn btn-primary float-right">Save</button> -->
             </div>
             
         </form>
