@@ -19,6 +19,7 @@
       <div class="alert alert-primary col-sm-6" role="alert" style="padding-left: -10px;">
         Login - Client Area !
       </div>
+      <br>
         <form  method="POST" id="form_login">
           <div class="row form-group">
             <div class="col-sm-2">
