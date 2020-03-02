@@ -37,4 +37,8 @@ class Invoice extends Model
     public function payment(){
         return $this->hasMany('App\Payment', 'invoiceid');
     }
+
+    public function transaction(){
+        return $this->hasMany('App\Transaction', 'invoiceid');
+    }
 }

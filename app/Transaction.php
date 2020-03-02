@@ -17,4 +17,8 @@ class Transaction extends Model
     protected $table = 'tbltransaction';
 
     protected $fillable = ['transactionid', 'clientid', 'invoiceid', 'amountin', 'amountout', 'paymentmethod', 'description', 'created_at', 'updated_at'];
+
+    public function invoice(){
+        return $this->belongsTo('App\Invoice');
+    }
 }

@@ -11,6 +11,7 @@ use App\Invoice;
 use App\Item;
 use App\Credit;
 use App\Payment;
+use App\Transaction;
 use App\MailModel;
 use App\Events\MailEvent;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -72,7 +73,7 @@ class InvoiceController extends Controller
     }
 
     public function detail_invoice($id){
-        $invoice  = Invoice::with('client')->with('items')->with('credit')->with('payment')
+        $invoice  = Invoice::with('client')->with('items')->with('credit')->with('payment')->with('transaction')
                                             ->where('tblinvoice.invoiceid', '=', $id)->first();
         return response()->json(["status" => "success", 'invoice'=>$invoice], 200);
     }
@@ -221,6 +222,13 @@ class InvoiceController extends Controller
                     } else {
                         $inv = Invoice::find($request->id_invoice)->update(['total'=> $total_inv]);
                     }
+                    $data = array(
+                        'clientid'      => $request->clientid,
+                        'invoiceid'     => $invoice->invoiceid,
+                        'amountin'      => $request->add_credit,
+                        'paymentmethod' => "Credit Applied"
+                    );  
+                    $this->add_transaction($data);
                     $response = ['status' => 'success', 'message'=>'Credit Added to Invoice'];
                 } else {
                     $response = ['status' => 'failed', 'message'=>'Failed to Add Credit'];
@@ -240,9 +248,16 @@ class InvoiceController extends Controller
                                         ]);
                 }
                 if ($cr) {
-                    return response()->json(['status' => 'success', 'message'=>'Credit Added to Invoice'], 200);
+                    $data = array(
+                        'clientid'      => $request->clientid,
+                        'invoiceid'     => $invoice->invoiceid,
+                        'amountin'      => $amount,
+                        'paymentmethod' => "Credit Applied"
+                    );  
+                    $this->add_transaction($data);
+                    $response = ['status' => 'success', 'message'=>'Credit Added to Invoice'];
                 } else {
-                    return response()->json(['status' => 'failed', 'message'=>'Failed to Add Credit'], 500);
+                    $response = ['status' => 'failed', 'message'=>'Failed to Add Credit'];
                 }
             }
             event(new MailEvent($client, $response));
@@ -326,6 +341,13 @@ class InvoiceController extends Controller
                     }else{
                         $response = ['status'=>'failed', 'message'=> 'Add payment to Invoice Failed','invoice_id'=>$id];
                     }
+                    $data = array(
+                        'clientid'      => $request->payment_clientid,
+                        'invoiceid'     => $invoice->invoiceid,
+                        'amountin'      => $request->payment_amount,
+                        'paymentmethod' => $request->payment_paymentmethod
+                    );  
+                    $this->add_transaction($data);
                 } else {
                     $response = ['status'=>'failed', 'message'=> 'Add Payment to Invoice Failed', 'invoice_id'=>$id];
                 }
@@ -337,7 +359,8 @@ class InvoiceController extends Controller
         return response()->json($request->input(), 200);
     }
 
-    public function mark_process(Request $request){
+    public function mark_process(Request $request)
+    {
         $status = $request->action;
         $id     = $request->id_inv;
         if($status == "Paid"){
@@ -390,5 +413,9 @@ class InvoiceController extends Controller
             }
         }
         return response()->json(['invoice'=>$invoice->get()], 200);
+    }
+
+    public function add_transaction($data){
+        Transaction::create($data);
     }
 }

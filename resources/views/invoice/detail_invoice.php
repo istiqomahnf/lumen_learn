@@ -221,8 +221,29 @@
                 <br><br>
             </form>
             </div>
+            <br><br>
+            <div class="card">
+                <div class="card-header">
+                    <h5>Transaction</h5>
+                </div>
+                <div class="card-body text-info">
+                    <table id="table_transaction" class="table table-bordered" width="100%">
+                        <thead>
+                            <tr bgcolor="#2d548a" style="color: #ffffff;">
+                                <th>Date</th>
+                                <th>Payment Method</th>
+                                <th>Transaction ID</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trans_content">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <br>
         </div>
-        <div></div>
         <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
             <form role="form" id="form_credit">
                 <div class="row" style="padding-top: 20px;">
@@ -357,6 +378,15 @@
                         ).appendTo('#item_content');
                         no++;
                         subtotal = subtotal + parseFloat(data.invoice.items[i].itemamount);
+                    }
+                    for(var i = 0; i < data.invoice.transaction.length; i++){
+                        var $tr = $('<tr>').append(
+                            $('<td align="center">'+data.invoice.transaction[i].created_at+'</td>'),
+                            $('<td align="center">'+data.invoice.transaction[i].paymentmethod+'</td>'),
+                            $('<td align="center">'+data.invoice.transaction[i].transactionid+'</td>'),
+                            $('<td align="center">'+data.invoice.transaction[i].amountin+'</td>'),
+                            
+                        ).appendTo('#trans_content');
                     }
                    
                     var balance = 0; 
