@@ -173,9 +173,7 @@
                     <td align="center">
                         <a href="/invoice/detail/{{$val->invoiceid}}">
                             <button type="button" class="btn btn-xs btn-info"><i class="fas fa-edit"></i></button></a> | 
-                        <!-- <a href="/invoice/delete/{{$val->invoiceid}}"> -->
                         <button type="button" class="btn btn-xs btn-danger" onclick="delete_inv('{{$val->invoiceid}}')"><i class="fas fa-trash"></i></button>
-                        <!-- </a>  -->
                     </td>
                 </tr>
                 @endforeach
