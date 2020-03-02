@@ -12,6 +12,7 @@ use App\Item;
 use App\Credit;
 use App\Payment;
 use App\MailModel;
+use App\Events\MailEvent;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
@@ -220,9 +221,9 @@ class InvoiceController extends Controller
                     } else {
                         $inv = Invoice::find($request->id_invoice)->update(['total'=> $total_inv]);
                     }
-                    return response()->json(['status' => 'success', 'message'=>'Credit Added to Invoice'], 200);
+                    $response = ['status' => 'success', 'message'=>'Credit Added to Invoice'];
                 } else {
-                    return response()->json(['status' => 'failed', 'message'=>'Failed to Add Credit'], 500);
+                    $response = ['status' => 'failed', 'message'=>'Failed to Add Credit'];
                 }
             } else {
                 $credit_client = (float)$client->credit - (float)$request->add_credit;
@@ -244,6 +245,8 @@ class InvoiceController extends Controller
                     return response()->json(['status' => 'failed', 'message'=>'Failed to Add Credit'], 500);
                 }
             }
+            event(new MailEvent($client, $response));
+            return response()->json($response, 200);
         }
     }
 
@@ -320,18 +323,14 @@ class InvoiceController extends Controller
                     if($update){
                         $response = ['status'=>'success', 'message'=> 'Add Payment to Invoice Successful',
                                      'invoice_id'=>$id, 'amount'=>$request->payment_amount];
-                        $mail->send_email($response);
-                        return response()->json($response, 200);
                     }else{
                         $response = ['status'=>'failed', 'message'=> 'Add payment to Invoice Failed','invoice_id'=>$id];
-                        $mail->send_email($response);
-                        return response()->json($response, 200);
                     }
                 } else {
                     $response = ['status'=>'failed', 'message'=> 'Add Payment to Invoice Failed', 'invoice_id'=>$id];
-                    $mail->send_email($response);
-                    return response()->json($response, 500);
                 }
+                event(new MailEvent($client, $response));
+                return response()->json($response, 200);
         }else{
             return response()->json(['status'=>'failed', 'message'=>"This Invoice has been Paid"], 200);
         }

@@ -64,9 +64,9 @@
         </div>
       </div>
     </nav>
-    <div class="container col-sm-10" style=" padding-top: 30px;">
+    <div class="container col-sm-12" style=" padding-top: 30px;">
         <div class="row">
-            <div class="card col-lg-3 col-sm-4" style="margin-left: 60px;">
+            <div class="card col-lg-3 col-sm-6 col-md-5" style="margin-left: 60px;">
                 <div class="card-body">
                     <h5 class="card-title">Client Information</h5><br>
                     <table width="100%" class="table table-striped">
@@ -112,7 +112,7 @@
                     @endforeach
                 </div>
             </div> &nbsp;
-            <div class="card col-lg-3 col-sm-4" style="margin-left: 60px;">
+            <div class="card col-lg-3 col-sm-6 col-md-5" style="margin-left: 60px;">
                 <div class="card-body">
                     <h5 class="card-title">Invoice/Billing</h5><br>
                     <table width="100%" class="table table-striped">
@@ -152,7 +152,7 @@
                     @endforeach
                 </div>
             </div>&nbsp;
-            <div class="card col-lg-3 col-sm-4" style="margin-left: 60px;">
+            <div class="card col-lg-3 col-sm-6 col-md-5" style="margin-left: 60px;">
                 <div class="card-body">
                     <h5 class="card-title">Other Information</h5><br>
                     <table width="100%" class="table table-striped">
