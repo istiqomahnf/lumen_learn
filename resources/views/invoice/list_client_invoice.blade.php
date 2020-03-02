@@ -145,7 +145,6 @@
             </div>
         </div>
         </form>
-        <!-- </div> -->
         <hr>
         <table width="100%" class="table table-bordered table-striped">
             <thead>
