@@ -15,8 +15,8 @@ class EventServiceProvider extends ServiceProvider
         // 'App\Events\ExampleEvent' => [
         //     'App\Listeners\ExampleListener',
         // ],
-        'App\Events\LogEvent' => [
-                'App\Listeners\LogListener',
+        'App\Events\MailEvent' => [
+                'App\Listeners\MailListener',
             ],
     ];
 }

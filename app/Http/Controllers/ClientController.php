@@ -11,7 +11,7 @@ use App\Invoice;
 use App\Client;
 use Validator;
 use App\MailModel;
-use App\Events\LogEvent;
+use App\Events\MailEvent;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
@@ -196,12 +196,14 @@ class ClientController extends Controller
         }
         if ($update) {
             $response = ['status'=>'success', 'message'=>"Client Data has been updated", 'client_id'=>$client->clientid];
-            $mail->send_email($response);
-            return response()->json($response, 200);
         } else {
             $response = ['status'=>'failed', 'message'=>"Failed to update client", 'client_id'=>$client->clientid];
-            $mail->send_email($response);
+        }
+        // $mail->send_email($response);
+        if(event(new MailEvent($client, $response))){
             return response()->json($response, 200);
+        }else{
+            return response()->json(['status'=>'fail', 'message'=>"Error Listeners", 'client_id'=>$client->clientid], 200);
         }
         
     }
