@@ -59,7 +59,7 @@
     </nav>
     <div class="container" style="padding-top: 40px;">
       <div class="row col-sm-12 col-lg-12" >
-        <table class="table table-bordered table-striped">
+        <table class="table table-bordered table-striped" width="100%">
           <thead>
             <tr align="center" bgcolor="#6db3a8">
               <th>ID</th>
@@ -95,8 +95,16 @@
               <td><?php echo $status; ?></td>
             </tr>
             @endforeach
+            <tr>
+                <td align="center" colspan="8">
+                {!! $client->links() !!}
+                </td>
+            </tr>
           </tbody>
         </table>
+        <input type="hidden" name="hidden_page" id="hidden_page" value="1" />
+        <input type="hidden" name="hidden_column_name" id="hidden_column_name" value="id" />
+        <input type="hidden" name="hidden_sort_type" id="hidden_sort_type" value="asc" />
       </div>
     </div>
     <script>

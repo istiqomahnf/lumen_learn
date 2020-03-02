@@ -108,7 +108,7 @@ class ClientController extends Controller
     }
 
     public function all(){
-        $client = Client::all();
+        $client = Client::orderBy('clientid', 'ASC')->paginate(10);
         return view('client.all_client', ['client'=>$client]);
     }
 
