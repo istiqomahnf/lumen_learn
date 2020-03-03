@@ -148,7 +148,8 @@
                     </table>
                     <a href="/client/invoices/{{$value->clientid}}"><i class="fas fa-list"></i> List Invoice</a><br>
                     <a href="/invoice/add/{{$value->clientid}}"><i class="fas fa-edit"></i> Create Invoice</a><br>
-                    <!-- <a href="/client/addfund"><i class="fas fa-fire"></i> Create Add Funds Invoice</a><br> -->
+                    <a href="/transaction/{{$value->clientid}}"><i class="fas fa-fire"></i> Add Transaction</a><br>
+                    <a href="/transaction/client/{{$value->clientid}}"><i class="fas fa-list-alt"></i> List Transaction</a><br>
                     @endforeach
                 </div>
             </div>&nbsp;

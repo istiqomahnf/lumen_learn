@@ -17,11 +17,14 @@ class Client extends Model implements AuthenticatableContract, AuthorizableContr
 
     protected $table = 'tblclient';
     protected $fillable = ['firstname', 'lastname', 'companyname', 'email', 'address', 'city', 'postcode', 'country', 'phonenumber', 'password', 'paymentmethod', 'notes', 'currency', 'created_at', 'updated_at', 'credit', 'status'];
-
+    // protected $guarded = 'clientid';
     protected $primaryKey = 'clientid';
 
     public function invoice(){
         return $this->hasMany('App\Invoice');
+    }
+    public function transaction(){
+        return $this->hasMany('App\Transaction');
     }
 
     public function getJWTIdentifier()

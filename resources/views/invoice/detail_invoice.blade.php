@@ -234,6 +234,7 @@
                                 <th>Payment Method</th>
                                 <th>Transaction ID</th>
                                 <th>Amount</th>
+                                <th width="5%"></th>
                             </tr>
                         </thead>
                         <tbody id="trans_content">
@@ -380,12 +381,19 @@
                         subtotal = subtotal + parseFloat(data.invoice.items[i].itemamount);
                     }
                     for(var i = 0; i < data.invoice.transaction.length; i++){
+                        var tr_id = ""; var ref = "";
+                        if(data.invoice.transaction[i].transactionid != null){
+                            tr_id = data.invoice.transaction[i].transactionid;
+                        }
+                        if(data.invoice.transaction[i].reference == 0){
+                            ref = '<button class="btn btn-xs btn-danger rounded-circle" onclick="delete_transaction('+data.invoice.transaction[i].id+')"><b>-</b></button>';
+                        }
                         var $tr = $('<tr>').append(
                             $('<td align="center">'+data.invoice.transaction[i].created_at+'</td>'),
                             $('<td align="center">'+data.invoice.transaction[i].paymentmethod+'</td>'),
-                            $('<td align="center">'+data.invoice.transaction[i].transactionid+'</td>'),
+                            $('<td align="center">'+tr_id+'</td>'),
                             $('<td align="center">'+data.invoice.transaction[i].amountin+'</td>'),
-                            
+                            $('<td align="center">'+ref+'</td>'),
                         ).appendTo('#trans_content');
                     }
                    
@@ -394,11 +402,23 @@
                         balance = balance + data.invoice.payment[i].amount;
                     }
                    
-                    // balance = balance - data.invoice.total;
+                    balance = balance - data.invoice.total;
                     if(data.invoice.credit != null){
-                        balance = balance - data.invoice.credit.amount;
-                    }else{
-                        balance = balance - data.invoice.total;
+                        balance = balance + data.invoice.credit.amount;
+                    }
+                    // else{
+                    //     balance = balance - data.invoice.total;
+                    // }
+
+                    for(var i = 0; i< data.invoice.transaction.length; i++){
+                        if(data.invoice.transaction[i].reference == 0){
+                            if(data.invoice.transaction[i].amountin != 0){
+                                balance = balance + data.invoice.transaction[i].amountin;
+                            }
+                            if(data.invoice.transaction[i].amountout != 0){
+                                balance = balance - data.invoice.transaction[i].amountout;
+                            }
+                        }
                     }
                     console.log(balance);
                     $("#c_balance_client").val(Math.abs(balance));
@@ -619,6 +639,25 @@
                     }
                 }
             });
+        }
+
+        function delete_transaction(id){
+            var inv_id = $("#id_invoice").val();
+            if(confirm("Are u sure to delete this transaction ?")){
+                $.ajax({
+                    url: "/transactions/"+id,
+                    type: "DELETE",
+                    dataType: "JSON",
+                    success: function(data){
+                        if (data.status=="success") {
+                            alert(data.message);
+                            window.open('/invoice/detail/'+inv_id, '_self');
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
+            }
         }
     </script>
 </body>

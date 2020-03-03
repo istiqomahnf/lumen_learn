@@ -83,6 +83,20 @@ $router->get('/',['middleware'=>'user.sess', 'as'=> 'index', function() use ($ro
     $router->get('/invoice/v2/{id}', 'ClientController@getInvoice');
     $router->post('/invoice/v1/search','InvoiceController@search_invoice');
 
+    $router->get('/transaction/{id}', function($id){
+        return view('transaction.add_transaction', ['clientid'=>$id]);
+    });
+    $router->get('/transaction/client/{id}', function($id){
+        return view('transaction.client_transaction', ['clientid'=>$id]);
+    });
+    $router->get('/transaction/edit/{id}', function($id){
+        return view('transaction.edit_transaction');
+    });
+    $router->post('/transactions', 'TransactionController@add_transaction');
+    $router->delete('/transactions/{id}', 'TransactionController@delete_transaction');
+    $router->get('/transactions/{id}', 'TransactionController@getTransaction_byId');
+    $router->put('/transactions/{id}', 'TransactionController@update');
+    $router->get('/transactions/client/{id}', 'TransactionController@fetch_transaction');
 
     //client
     $router->group(['prefix'=> 'client', 'middleware'=>'jwt.verify'], function () use($router){

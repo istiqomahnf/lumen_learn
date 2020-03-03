@@ -167,16 +167,19 @@ class InvoiceController extends Controller
 
     public function publish_invoice($id)
     {
-        $invoice = Invoice::find($id)->update([
+        $invoice = Invoice::find($id);
+        $update = $invoice->update([
                                     'status'        => 'Unpaid',
                                     'sendinvoice'   => 1,
                                     'published_at'  => Carbon::now()->toDateTimeString()
                                 ]);
-        if ($invoice) {
-            return response()->json(['status' => 'success', 'message'=>'Invoice has been published to client'], 200);
+        if ($update) {
+            $response = ['status' => 'success', 'message'=>'Invoice created has been published', 'invoiceid'=>$id];
         }else{
-            return response()->json(['status' => 'failed', 'message' => 'Failed to publish Invoice'], 500);
+            $response = ['status' => 'failed', 'message' => 'Failed to publish Invoice', 'invoiceid'=>$id];
         }
+        event(new MailEvent(\App\Client::find($invoice->userid),$response));
+        return response()->json($response, 200);
     }
 
     public function add_credit(Request $request)
@@ -219,14 +222,13 @@ class InvoiceController extends Controller
                                     'amount'    => $request->add_credit,
                                     'method'    => "Partial Credit"
                                     ]);
-                    } else {
-                        $inv = Invoice::find($request->id_invoice)->update(['total'=> $total_inv]);
                     }
                     $data = array(
                         'clientid'      => $request->clientid,
                         'invoiceid'     => $invoice->invoiceid,
                         'amountin'      => $request->add_credit,
-                        'paymentmethod' => "Credit Applied"
+                        'paymentmethod' => "Credit Applied",
+                        'reference'     => 1
                     );  
                     $this->add_transaction($data);
                     $response = ['status' => 'success', 'message'=>'Credit Added to Invoice'];
@@ -252,7 +254,8 @@ class InvoiceController extends Controller
                         'clientid'      => $request->clientid,
                         'invoiceid'     => $invoice->invoiceid,
                         'amountin'      => $amount,
-                        'paymentmethod' => "Credit Applied"
+                        'paymentmethod' => "Credit Applied",
+                        'reference'     => 1
                     );  
                     $this->add_transaction($data);
                     $response = ['status' => 'success', 'message'=>'Credit Added to Invoice'];
@@ -345,7 +348,9 @@ class InvoiceController extends Controller
                         'clientid'      => $request->payment_clientid,
                         'invoiceid'     => $invoice->invoiceid,
                         'amountin'      => $request->payment_amount,
-                        'paymentmethod' => $request->payment_paymentmethod
+                        'paymentmethod' => $request->payment_paymentmethod,
+                        'description'   => "Invoice Payment",
+                        'reference'     => 1
                     );  
                     $this->add_transaction($data);
                 } else {
@@ -367,6 +372,10 @@ class InvoiceController extends Controller
             $invoice = Invoice::find($id)->update(['status' => $status, 'datepaid'=> date('Y-m-d')]);
         }else{
             $invoice = Invoice::find($id)->update(['status' => $status]);
+            if($status == "Cancelled"){
+                $response = ['result' => true, 'message' => 'Invoice Cancelled' ,'invoiceid'=>$id];
+                event(new MailEvent($client, $response));
+            }
         }
         if ($invoice) {
             return response()->json(['status'=>"success",
