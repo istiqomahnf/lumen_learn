@@ -113,7 +113,7 @@
                             $('<td align="right">'+currency_setting(currency,data[i].amountin)+'</td>'),
                             $('<td align="right">'+currency_setting(currency,data[i].fee)+'</td>'),
                             $('<td align="right">'+currency_setting(currency,data[i].amountout)+'</td>'),
-                            $('<td align="center"><a href="/transaction/edit/'+data[i].id+'"><button type="button" class="btn btn-xs btn-info"><i class="fas fa-edit"></i></button></a> | <button type="button" class="btn btn-xs btn-danger" onclick="delete_transaction('+data[i].id+','+data[0].client.clientid+')"><i class="fas fa-trash"></i></button></td>')
+                            $('<td align="center"><a href="/transaction/edit/'+data[i].id+'"><button type="button" class="btn btn-xs btn-primary"><i class="fas fa-edit"></i></button></a> | <button type="button" class="btn btn-xs btn-danger" onclick="delete_transaction('+data[i].id+','+data[0].client.clientid+')"><i class="fas fa-trash"></i></button></td>')
                         ).appendTo('#invoice_content');
                     }
                 }
