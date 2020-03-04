@@ -16,7 +16,7 @@ class Invoice extends Model
     protected $table = 'tblinvoice';
 
     protected $fillable = [
-        'userid', 'status', 'paymentmethod', 'draft', 'sendinvoice', 'date', 'duedate', 'taxrate', 'autoapplycredit', 'notes', 'datepaid', 'total', 'published_at'
+        'userid', 'status', 'paymentmethod', 'draft', 'sendinvoice', 'date', 'duedate', 'taxrate', 'notes', 'datepaid', 'total', 'published_at'
     ];
 
     protected $primaryKey = 'invoiceid';

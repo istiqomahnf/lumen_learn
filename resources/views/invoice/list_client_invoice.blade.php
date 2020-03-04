@@ -149,6 +149,7 @@
         <table width="100%" class="table table-bordered table-striped">
             <thead>
                 <tr>
+                    <th></th>
                     <th>Invoice ID</th>
                     <th>Invoice Date</th>
                     <th>Due Date</th>
@@ -159,9 +160,11 @@
                     <th>Action</th>
                 </tr>
             </thead>
+        <form id="form_invoice">
             <tbody id ="invoice_content">
                 @foreach($invoices as $val)
                 <tr>
+                    <td><input type="checkbox" name="select[]" id="select" value="{{$val->invoiceid}}"></td>
                     <td><center><a href="/invoice/detail/{{$val->invoiceid}}">#{{$val->invoiceid}}</a></center></td>
                     <td align="center">{{$val->date}}</td>
                     <td align="center">{{$val->duedate}}</td>
@@ -178,6 +181,11 @@
                 @endforeach
             </tbody>
         </table>
+        With Selected : 
+        <button class="btn btn-sm btn-secondary" type="button" onclick="merge_invoice()">Merge</button>
+        <button class="btn btn-sm btn-secondary" type="button" onclick="mass_payment()">Mass Pay</button>
+        <button class="btn btn-sm btn-danger" type="button" onclick="delete_invoice()">Delete</button>
+        </form>
     </div>
 
     <script>
@@ -223,6 +231,59 @@
                             $('<td align="center"><a href="/invoice/detail/'+data.invoice[i].invoiceid+'"><button type="button" class="btn btn-xs btn-info"><i class="fas fa-edit"></i></button></a> | <button type="button" class="btn btn-xs btn-danger" onclick="delete_inv('+data.invoice[i].invoiceid+')"><i class="fas fa-trash"></i></button></td>')
                         ).appendTo('#invoice_content');
                     }
+                }
+            });
+        }
+
+        function merge_invoice(){
+            var x = $('input[name="select[]"]:checked');
+            if(x.length < 2){
+                alert("You must select at least 2 invoice");
+                return false;
+            }
+            var id = "{{Request::segment(3)}}";
+            $.ajax({
+                url: "/invoices/merge",
+                type: "POST",
+                dataType: "JSON",
+                data: $("#form_invoice").serialize(),
+                success: function(data){
+                    if(data.status == "success"){
+                        alert(data.message);
+                        window.open('/client/invoices/'+id, '_self');
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            });
+        }
+        function mass_payment(){
+            var id = "{{Request::segment(3)}}";
+            $.ajax({
+                url: "/invoices/mass/"+id,
+                type: "POST",
+                dataType: "JSON",
+                data: $("#form_invoice").serialize(),
+                success: function(data){
+                    if(data.status == "success"){
+                        alert(data.message);
+                        window.open('/client/invoices/'+id, '_self');
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            });
+        }
+
+        function delete_invoice(){
+            var id = "{{Request::segment(3)}}";
+            $.ajax({
+                url: "/invoices/delete",
+                type: "POST",
+                dataType: "JSON",
+                data: $("#form_invoice").serialize(),
+                success: function(data){
+                    console.log(data);
                 }
             });
         }

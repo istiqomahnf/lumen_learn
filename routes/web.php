@@ -82,6 +82,7 @@ $router->get('/',['middleware'=>'user.sess', 'as'=> 'index', function() use ($ro
     $router->post('/invoice/item', 'InvoiceController@create');
     $router->get('/invoice/v2/{id}', 'ClientController@getInvoice');
     $router->post('/invoice/v1/search','InvoiceController@search_invoice');
+    $router->post('/invoice/refund/{id}','InvoiceController@add_refund');
 
     $router->get('/transaction/{id}', function($id){
         return view('transaction.add_transaction', ['clientid'=>$id]);
@@ -135,3 +136,6 @@ $router->get('/',['middleware'=>'user.sess', 'as'=> 'index', function() use ($ro
     });
 
     $router->get('/mail/send', 'MailController@send_email');
+    $router->post('/invoices/merge', 'InvoiceController@merge_invoice');
+    $router->post('/invoices/mass/{id}', 'InvoiceController@mass_payment');
+    $router->post('/invoices/delete', 'InvoiceController@delete_multiinvoice');

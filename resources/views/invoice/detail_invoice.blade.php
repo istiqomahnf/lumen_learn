@@ -82,6 +82,7 @@
             <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Summary</a>
             <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Credit</a>
             <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false">Add Payment</a>
+            <a class="nav-item nav-link" id="nav-refund-tab" data-toggle="tab" href="#nav-refund" role="tab" aria-controls="nav-refund" aria-selected="false">Refund</a>
         </div>
     </nav>
     <div class="tab-content" id="nav-tabContent">
@@ -317,6 +318,47 @@
             </form>
             <center><button type="button" id="btn_payment" class="btn btn-primary btn-sm float-center">Add Payment</button></center>
         </div>
+        <div class="tab-pane fade" id="nav-refund" role="tabpanel" aria-labelledby="nav-refund-tab">
+        <br>
+            <div class="card">
+                <div class="card-body">
+                    <form id="form_refund">
+                        <div class="row" style="padding-top: 3px; padding-right: 25px;">
+                            <div class="col-sm-2"><label>Transactions</label></div>
+                            <div class="col-sm-4" style="background-color:#f2f2f2">
+                                <select name="refund_transaction" id="refund_transaction" class="form-control-sm form-control col-sm-8">
+                                    <span id="trans_option"></span>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style="padding-top: 3px; padding-right: 25px;">
+                            <div class="col-sm-2"><label>Amount</label></div>
+                            <div class="col-sm-4" style="background-color:#f2f2f2">
+                                <input type="text" name="refund_amount" id="refund_amount" class="form-control form-control-sm col-lg-6">
+                            </div>
+                        </div>
+                        <div class="row" style="padding-top: 3px; padding-right: 25px;">
+                            <div class="col-sm-2"><label>Refund Type</label></div>
+                            <div class="col-sm-4" style="background-color:#f2f2f2">
+                            Add to Client's Credit Balance
+                            </div>
+                        </div>
+                        <div class="row" style="padding-top: 3px; padding-right: 25px;">
+                            <div class="col-sm-2"><label>Send Confirmation Email</label></div>
+                            <div class="col-sm-4" style="background-color:#f2f2f2">
+                                <input type="checkbox" class="form-control-sm form-control col-sm-1" name="tickemail" id="tickemail" value="tick">     
+                            </div>
+                        </div>
+                        <div class="row" style="padding-top: 3px; padding-right: 25px; padding-top: 20px;">
+                        <div class="col-sm-2"></div>
+                            <div class="col-sm-4">
+                                <center><button type="button" class="btn btn-sm btn-primary" id="btn_refund" onclick="add_refund()">Refund</button></center>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
     </div>
     <script>
@@ -380,19 +422,27 @@
                         no++;
                         subtotal = subtotal + parseFloat(data.invoice.items[i].itemamount);
                     }
+                    var selectopt = $("#refund_transaction");
+
                     for(var i = 0; i < data.invoice.transaction.length; i++){
                         var tr_id = ""; var ref = "";
                         if(data.invoice.transaction[i].transactionid != null){
                             tr_id = data.invoice.transaction[i].transactionid;
                         }
                         if(data.invoice.transaction[i].reference == 0){
+                            selectopt.append($('<option>').text(data.invoice.transaction[i].created_at+' | '+data.invoice.transaction[i].transactionid +' | '+data.invoice.transaction[i].amountin).val(data.invoice.transaction[i].id));
+
                             ref = '<button class="btn btn-xs btn-danger rounded-circle" onclick="delete_transaction('+data.invoice.transaction[i].id+')"><b>-</b></button>';
+                        }
+                        var amount = data.invoice.transaction[i].amountin;
+                        if(data.invoice.transaction[i].amountout != 0){
+                            amount = "-" + data.invoice.transaction[i].amountout;
                         }
                         var $tr = $('<tr>').append(
                             $('<td align="center">'+data.invoice.transaction[i].created_at+'</td>'),
                             $('<td align="center">'+data.invoice.transaction[i].paymentmethod+'</td>'),
                             $('<td align="center">'+tr_id+'</td>'),
-                            $('<td align="center">'+data.invoice.transaction[i].amountin+'</td>'),
+                            $('<td align="center">'+currency_setting(currency, amount)+'</td>'),
                             $('<td align="center">'+ref+'</td>'),
                         ).appendTo('#trans_content');
                     }
@@ -658,6 +708,24 @@
                     }
                 });
             }
+        }
+        function add_refund(){
+            var id = $("#invoiceid").val();
+            $.ajax({
+                url: "/invoice/refund/"+id,
+                type: "POST",
+                dataType: "JSON",
+                data: $("#form_refund").serialize(),
+                success: function(data){
+                    if (data.status=="success") {
+                        alert(data.message);
+                        window.open('/invoice/detail/'+inv_id, '_self');
+                    } else {
+                        alert(data.message);
+                    }
+                    // console.log(data);
+                }
+            });
         }
     </script>
 </body>

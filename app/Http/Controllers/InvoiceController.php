@@ -216,12 +216,12 @@ class InvoiceController extends Controller
                                             'datepaid'=>date('Y-m-d'),
                                             'paymentmethod' => $payment_method
                                             ]);
-                        Payment::create([
-                                    'invoiceid' => $request->id_invoice,
-                                    'datepaid'  => date('Y-m-d'),
-                                    'amount'    => $request->add_credit,
-                                    'method'    => "Partial Credit"
-                                    ]);
+                        // Payment::create([
+                        //             'invoiceid' => $request->id_invoice,
+                        //             'datepaid'  => date('Y-m-d'),
+                        //             'amount'    => $request->add_credit,
+                        //             'method'    => "Partial Credit"
+                        //             ]);
                     }
                     $data = array(
                         'clientid'      => $request->clientid,
@@ -294,6 +294,14 @@ class InvoiceController extends Controller
                             'credit'    => $credit_client
                     ]);
                     if ($cln) {
+                        $data = array(
+                            'clientid'      => $request->clientid,
+                            'invoiceid'     => $invoice->invoiceid,
+                            'amountout'     => $amount,
+                            'paymentmethod' => "Remove Credit",
+                            'reference'     => 1
+                        );
+                        $this->add_transaction($data);
                         return response()->json(['status'=>'success', 'message'=> "Successfull Remove Credit"], 200);
                     }
                 } else {
@@ -425,6 +433,185 @@ class InvoiceController extends Controller
     }
 
     public function add_transaction($data){
-        Transaction::create($data);
+        $add = Transaction::create($data);
+        return $add;
+    }
+
+    public function merge_invoice(Request $request){
+        $array      = $request->select;
+        $max        = max($array);
+        $invoice    = Invoice::find($max);
+        $total_max  = (float)$invoice->total;
+        foreach ($array as $value) {
+            if($value != $max){
+                $invoice_old = Invoice::find($value);
+                $items = Item::where("invoiceid", $value)->get();
+                foreach ($items as $item) {
+                    $update_item = Item::find($item->itemid)
+                                    ->update(['invoiceid' => $max]);
+                }
+                $payments = Payment::where('invoiceid', $value)->get();
+                foreach ($payments as $payment) {
+                    $update_payment = Payment::find($payment->paymentid)
+                                        ->update(['invoiceid' => $max]);
+                }
+                $credits    = Credit::where('invoiceid', $value)->first();
+                if(!empty($credits)){
+                    $amount     = $credits->amount;
+                    $credit_max = Credit::where('invoiceid', $max)->first();
+                    if(!empty($credit_max)){
+                        $credit_inv = (float)$credit_max->amount;
+                        $credit_inv = $credit_inv + (float)$credits->amount;
+                        $update     = Credit::find($max)
+                                            ->update(['amount' => $credit_inv]);
+                        if(!$update){
+                            return response()->json(['status' => "fail", 'message'=>"Failed update credit to Invoice"], 200);
+                        }
+                    }else{
+                        $create = Credit::create([
+                                    'invoiceid' => $max,
+                                    'userid'    => $credits->userid,
+                                    'amount'    => $amount,
+                                    'type'      => "Add",
+                                    'date'      => Carbon::now()->toDateTimeString()
+                        ]);
+                        if(!$create){
+                            return response()->json(['status' => "fail", 'message'=>"Failed add credit to Invoice"], 200);
+                        }
+                    }
+                }
+                $transactions = Transaction::where('invoiceid', $value)->get();
+                foreach ($transactions as $key) {
+                    $update_item = Transaction::find($key->id)
+                                    ->update(['invoiceid' => $max]);
+                }
+                $delete = Invoice::find($value)->delete();
+                if(!$delete){
+                    return response()->json(['status' => "fail", 'message'=>"Failed to delete invoice"], 200);
+                }
+                $total_max = $total_max + (float)$invoice_old->total;
+            }
+        }
+        $update = Invoice::find($max)->update(['total' => $total_max]);
+        if(!$update){
+            return response()->json(['status' => "fail", 'message'=>"Failed to Merge Invoice"], 200);
+        }
+        return response()->json(['status'=>"success", 'message'=>"Merge Invoice Successful"], 200);
+    }
+
+    public function mass_payment($id, Request $request)
+    {
+        $sum_total  = Invoice::whereIn('invoiceid', $request->select)->sum('total');
+        $client     = Client::find($id);
+        $invoice = Invoice::create([
+                    'userid'        => $id,
+                    'status'        => "Unpaid",
+                    'paymentmethod' => $client->paymentmethod,
+                    'draft'         => 1,
+                    'sendInvoice'   => 1,
+                    'date'          => date('Y-m-d'),
+                    'duedate'       => config('help.DUE_DATE'),
+                    'taxrate'       => config('help.TAXRATE'),
+                    'notes'         => " ",
+                    'total'         => $sum_total,
+                    'published_at'  => Carbon::now()->toDateTimeString()
+        ]);
+        $id_inv = $invoice->invoiceid;
+        $items = Item::whereIn('invoiceid', $request->select)->get();
+        foreach($items as $val)
+        {
+            $item = Item::create([
+                        'invoiceid'     => $id_inv,
+                        'itemdescription'=> "Invoice #".$val->invoiceid,
+                        'itemamount'    => $val->itemamount,
+                        'itemtaxed'     => $val->itemtaxed
+                    ]);
+            if(!$item){
+                return response()->json(['status'=>"fail", 'message'=>"failed to create item"], 200);
+            }
+        }
+        $transactions = Transaction::whereIn('invoiceid', $request->select)->get();
+        foreach ($transactions as $value) {
+            $transaction = Transaction::create([
+                        'clientid'      => $id, 
+                        'invoiceid'     => $id_inv,
+                        'amountin'      => $value->amountin,
+                        'amountout'     => $value->amountout,
+                        'fee'           => $value->fee,
+                        'paymentmethod' => $value->paymentmethod,
+                        'description'   => $value->description,
+                        'date'          => date('Y-m-d'),
+                        'reference'     => $value->reference
+            ]);
+            if(!$transaction){
+                return response()->json(['status'=>"fail", 'message'=>"failed to create transaction"], 200);
+            }
+        }
+        $a_credit   = Credit::whereIn('invoiceid', $request->select)->where('type', "Add")->sum('amount');
+        $credit     = Credit::create([
+                        'userid'    => $id,
+                        'amount'    => $a_credit,
+                        'type'      => "Add",
+                        'date'      => Carbon::now()->toDateTimeString(),
+                        'adminid'   => $request->session()->get('user_id'),
+                        'invoiceid' => $id_inv
+                    ]);
+        if(!$credit){
+            return response()->json(['status'=>'fail', 'message'=>"Credit failed to create"], 200);
+        }
+        $payments   = Payment::whereIn('invoiceid', $request->select)->get();
+        foreach($payments as $val)
+        {
+            $payment = Payment::create([
+                        'invoiceid' => $id_inv,
+                        'datepaid'  => $val->datepaid,
+                        'amount'    => $val->amount,
+                        'method'    => $val->method
+                    ]);
+            if(!$payment){
+                return response()->json(['status'=>"fail", 'message'=>"failed to create payment"], 200);
+            }
+        }
+        return response()->json(['status'=>"success", 'message'=>'Mass Payment Created Successfully'], 200);
+    }
+
+    public function delete_multiinvoice(Request $request)
+    {
+        $array = $request->select;
+        foreach($array as $value){
+            $del = $this->delete_invoice($value);
+        }
+        return response()->json($del, 200);
+    }
+
+    public function add_refund($id, Request $request)
+    {
+        $invoice = Invoice::find($id);
+        $client  = $invoice->userid;
+        $client  = Client::find($client);
+        $credit  = (float)$client->credit;
+
+        $total  = $credit + (float)$request->refund_amount;
+        $client->update([
+            'credit'     => $total
+        ]);
+        $data = array(
+            'clientid'      => $client->clientid,
+            'invoiceid'     => $id,
+            'amountout'     => $request->refund_amount,
+            'paymentmethod' => "-",
+            'date'          => date('Y-m-d'),
+            'reference'     => 0
+        );
+        $create = $this->add_transaction($data);
+        if ($create) {
+            $response = ['status'=>'success', 'message' => 'Refund Successful', 'invoiceid'=>$id, 'params'=>$request->except('tickemail')];
+        } else {
+            $response = ['status'=>'failed', 'message' => 'Refund Failed', 'invoiceid'=>$id, 'params'=>$request->except('tickemail')];
+        }
+        if($request->tickemail != null){
+            event(new MailEvent($client, $response));
+        }
+        return response()->json($response, 200);
     }
 }
