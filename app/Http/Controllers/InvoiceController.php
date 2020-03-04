@@ -216,12 +216,6 @@ class InvoiceController extends Controller
                                             'datepaid'=>date('Y-m-d'),
                                             'paymentmethod' => $payment_method
                                             ]);
-                        // Payment::create([
-                        //             'invoiceid' => $request->id_invoice,
-                        //             'datepaid'  => date('Y-m-d'),
-                        //             'amount'    => $request->add_credit,
-                        //             'method'    => "Partial Credit"
-                        //             ]);
                     }
                     $data = array(
                         'clientid'      => $request->clientid,
