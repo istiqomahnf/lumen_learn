@@ -187,7 +187,7 @@
                         </thead>
                         <input type="hidden" id="userid" name= "userid" value="">
                         <input type="hidden" id="invoiceid" name="invoiceid" value="">
-                        <input type="hidden" id="credit_b" name="credit_b" value="">
+                        <!-- <input type="hidden" id="credit_b" name="credit_b" value=""> -->
                         <tbody id= "item_content">
                         
                         </tbody>
@@ -485,7 +485,7 @@
                     $("#taxrate").html(currency_setting(currency,tax));
                     if(data.invoice.credit != null){
                         $("#credit, #remove_credit_inv").html(currency_setting(currency,data.invoice.credit.amount)); 
-                        $("#credit_b").val(data.invoice.credit.amount);
+                        // $("#credit_b").val(data.invoice.credit.amount);
                     }else{
                         $("#credit, #remove_credit_inv").html(currency_setting(currency,0)); 
                     }

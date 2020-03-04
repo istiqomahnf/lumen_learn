@@ -24,14 +24,21 @@
               border-radius: .2rem;
             }
             .sidebar{
+                background-color: #ffffff;
+            }
+            body {
                 background-color: #f7f7f7;
+            }
+            span{
+                font-size: 14px;
             }
         </style>
 </head>
 <body id="page-top">
-    <div class="container" style="padding-top: 80px">
+    <div class="container" style="padding-top: 50px">
     <div class="row">
-        <div class="col-md-9 col-sm-12 pull-md-left sidebar" style="padding-top: 20px">
+    <div class="col-md-2"></div>
+        <div class="col-md-8 col-sm-12 pull-md-left sidebar rounded border" style="padding-top: 20px;">
             <div class="panel panel-sidebar">
                 <div class="panel-heading">
                     <h5 class="panel-title">
@@ -53,7 +60,7 @@
                         </div>
                         <div class="col-sm-9">
                             <center>
-                                <h4><span id="status"></span></h4>
+                                <span id="status"></span>
                                 <span id="duedate"></span><br><span id="datepaid"></span>
                             </center><br>
                             <b class="float-right">Pay to</b><br>
@@ -127,11 +134,31 @@
                                             <td align="right" id="totaldue_inv"></td>
                                         </tr>
                                     </table>
+                                    <br>
+                                </div>
+                            </div>
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h5 class="m-0 font-weight-bold text-secondary">Transaction</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-bordered" width="100%">
+                                        <thead>
+                                            <tr align="center">
+                                                <th>Transaction Date</th>
+                                                <th>Gateway</th>
+                                                <th>Transaction ID</th>
+                                                <th>Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="trans_content">
+                                        
+                                        </tbody>
+                                    </table>
                                     <span class="float-right"><b>Balance : </b><span id="creditbalance"></span></span>
                                     <br>
                                 </div>
                             </div>
-                            <br><br>
                         </div>
                    </div>
                 </div>
@@ -139,6 +166,7 @@
         </div>
     </div>
     </div>
+    <br>
     <script>
         $(document).ready(function(){
             var invoiceid = "{{Request::segment(4)}}";
@@ -164,7 +192,7 @@
                     $("#address").html(data.invoice.client.address);
                     $("#city").html(data.invoice.client.city + ", "+data.invoice.client.postcode);
                     $("#country").html(data.invoice.client.country);
-                    $("#status").html(status.toUpperCase());
+                    $("#status").html("<h4><b>"+status.toUpperCase()+"</b></h4>");
                     $("#duedate").html("Due Date : "+data.invoice.duedate);
                     $("#inv_date").html(data.invoice.duedate);
                     $("#payment_paymentmethod").val(data.invoice.paymentmethod).change();
@@ -197,11 +225,29 @@
                         balance = balance + data.invoice.payment[i].amount;
                     }
                    
-                    // balance = balance - data.invoice.total;
+                    balance = balance - data.invoice.total;
                     if(data.invoice.credit != null){
-                        balance = balance - data.invoice.credit.amount;
-                    }else{
-                        balance = balance - data.invoice.total;
+                        balance = balance + data.invoice.credit.amount;
+                    }
+
+                    for(var i = 0; i < data.invoice.transaction.length; i++){
+                        var tr_id = ""; var ref = "";
+                        if(data.invoice.transaction[i].transactionid != null){
+                            tr_id = data.invoice.transaction[i].transactionid;
+                        }
+                        if(data.invoice.transaction[i].reference == 0){
+                            ref = '<button class="btn btn-xs btn-danger rounded-circle" onclick="delete_transaction('+data.invoice.transaction[i].id+')"><b>-</b></button>';
+                        }
+                        var amount = data.invoice.transaction[i].amountin;
+                        if(data.invoice.transaction[i].amountout != 0){
+                            amount = "-" + data.invoice.transaction[i].amountout;
+                        }
+                        var $tr = $('<tr>').append(
+                            $('<td align="center">'+data.invoice.transaction[i].created_at+'</td>'),
+                            $('<td align="center">'+data.invoice.transaction[i].paymentmethod+'</td>'),
+                            $('<td align="center">'+tr_id+'</td>'),
+                            $('<td align="center">'+currency_setting(currency, amount)+'</td>'),
+                        ).appendTo('#trans_content');
                     }
                     $("#subtotal").html(currency_setting(currency,subtotal));
                     $("#add_credit, #c_balance_client").val(Math.abs(balance));

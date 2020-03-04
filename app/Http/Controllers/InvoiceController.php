@@ -106,9 +106,6 @@ class InvoiceController extends Controller
                         Item::insert($item);
                     }
                 }
-                if($request->credit_b != ""){
-                    $total = $total - (float)$request->credit_b;
-                }
                 $invoice = Invoice::find($id)->update(['total' => $total]);
             return response()->json(['status'=>'success', 'message'=>"Invoice has been Updated Successfully"], 200);
         } else {
