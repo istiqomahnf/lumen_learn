@@ -70,7 +70,7 @@ $router->get('/',['middleware'=>'user.sess', 'as'=> 'index', function() use ($ro
         $router->post('/credit/r', 'InvoiceController@remove_credit');
         $router->post('/payment/{id}', 'InvoiceController@add_payment');
         $router->post('/mark', 'InvoiceController@mark_process');
-        $router->delete('/item', 'InvoiceController@delete_item');
+        $router->delete('/item/{id}', 'InvoiceController@delete_item');
         $router->post('/send/{id}', 'InvoiceController@publish_invoice');
         $router->post('/credit', 'InvoiceController@add_credit');
         $router->post('/invoice1/{id}', 'InvoiceController@update');
@@ -139,3 +139,4 @@ $router->get('/',['middleware'=>'user.sess', 'as'=> 'index', function() use ($ro
     $router->post('/invoices/merge', 'InvoiceController@merge_invoice');
     $router->post('/invoices/mass/{id}', 'InvoiceController@mass_payment');
     $router->post('/invoices/delete', 'InvoiceController@delete_multiinvoice');
+    $router->post('/invoices/selected/{id}', 'InvoiceController@selected_action');

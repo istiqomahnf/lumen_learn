@@ -74,7 +74,9 @@ class TransactionController extends Controller
     }
 
     public function fetch_transaction($id){
-        $transaction = Transaction::where('clientid', $id)->with('client')->get();
+        $transaction = Transaction::where('clientid', $id)
+                                    ->where('reference', '!=', 1)
+                                    ->with('client')->get();
         return response()->json($transaction, 200);
     }
 

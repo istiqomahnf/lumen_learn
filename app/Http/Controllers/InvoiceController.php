@@ -114,8 +114,7 @@ class InvoiceController extends Controller
         return response()->json($request->item, 200);
     }
 
-    public function delete_item(Request $request){
-        $id = $request->id;
+    public function delete_item($id){
         $item = Item::find($id);
         if($item->itemtaxed == 1){
             $amount = $item->itemamount;
@@ -124,7 +123,7 @@ class InvoiceController extends Controller
             $amount = $item->itemamount;
         }
 
-        $inv_id     = $request->inv_id;
+        $inv_id     = $item->invoiceid;
         $invoice    = Invoice::find($inv_id);
         $total = $invoice->total - $amount;
         $invoice = Invoice::find($inv_id)->update(['total' => $total]);
@@ -604,5 +603,60 @@ class InvoiceController extends Controller
             event(new MailEvent($client, $response));
         }
         return response()->json($response, 200);
+    }
+
+    public function selected_action($id, Request $request)
+    {
+        $action = $request->action;
+        $array  = $request->selected;
+        if($action == "multidelete"){
+            foreach ($array as $value) {
+                $this->delete_item($value);
+            }
+            return response()->json(['status'=>"success", 'message'=>"Items has been deleted"], 200);
+        }elseif($action == "split"){
+            $invoice    = Invoice::find($id);
+            if($invoice->status!=="Unpaid"){
+                return response()->json(['status'=>'fail', 'message'=>"Invoice in ".$invoice->status." status"], 200);
+            }else{
+                $cekitems = Item::where('invoiceid', $id)->get()->count();
+                if(count($array) >= $cekitems){
+                    return response()->json(['status'=>'null'], 200);
+                }else{
+                    $total_item = 0;
+                    foreach ($array as $value) {
+                        $cekamount = Item::select('itemamount', 'itemtaxed')
+                                        ->where('itemid', $value)->first();
+                        if($cekamount->itemtaxed == 1){
+                            $amount = $cekamount->itemamount;
+                            $amount *= config('help.PERCENTAGE');
+                            $total_item = $total_item + $amount;
+                        }else{
+                            $total_item = $total_item + $cekamount->itemamount;
+                        }
+                    }
+                    $create = Invoice::create([
+                        'userid'        => $invoice->userid,
+                        'status'        => $invoice->status,
+                        'paymentmethod' => $invoice->paymentmethod,
+                        'draft'         => $invoice->draft,
+                        'sendinvoice'   => $invoice->sendinvoice,
+                        'date'          => date('Y-m-d'),
+                        'duedate'       => date('Y-m-d'),
+                        'taxrate'       => config('help.TAXRATE'),
+                        'total'         => $total_item,
+                        'published_at'  => Carbon::now()->toDateTimeString()
+                    ]);
+                    $new_id = $create->invoiceid;
+                    $update = Item::whereIn('itemid', $array)->update(['invoiceid'=>$new_id]);
+                    if($update){
+                        return response()->json(['status'=>"success", 'message'=>"Invoice has been splitted"], 200);
+                    }else{
+                        return response()->json(['status'=>"fail", 'message'=>"Split Invoice Failed"], 200);
+                    }
+                }
+            }
+        }
+        return response()->json($total_item, 200);
     }
 }
